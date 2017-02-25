@@ -60,6 +60,7 @@ app.use(function(req,res,next){
 var opts = {}
 console.log(process.env.MONGO_URL);
 opts.secretOrKey = process.env.JWT_SECRET;
+opts.jwtFromRequest = ExtractJwt.fromAuthHeader();
 passport.use(new JwtStrategy(opts, function(jwt_payload, done) {
     user.findOne({id: jwt_payload.id}, function(err, user) {
         if (err) {

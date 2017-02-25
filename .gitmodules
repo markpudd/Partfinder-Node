@@ -1,0 +1,3 @@
+[submodule "Partfinder-Web"]
+	path = Partfinder-Web
+	url = git@github.com:markpudd/Partfinder-Web.git
