@@ -14,5 +14,5 @@ RUN bower --allow-root install
 # Bundle app source
 COPY . /usr/src/app
 
-EXPOSE 8080
+EXPOSE 3000
 CMD [ "npm", "start" ]

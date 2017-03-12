@@ -4,6 +4,16 @@ var router = express.Router();
 var mongoose = require('mongoose');
 var part = require('../models/Part.js');
 var store = require('../models/Store.js');
+var pubsub = require('@google-cloud/pubsub');
+
+// Your Google Cloud Platform project ID
+const projectId = 'process.env.GCP_PROJECT_ID';
+
+// Instantiates a client
+const pubsubClient = pubsub({
+  projectId: projectId
+});
+
 
 router.get('/categories', function(req, res, next) {
   part.distinct('category', function (err, categories) {
@@ -43,7 +53,18 @@ router.get('/store/:pid/:secid', function(req, res, next) {
 router.get('/:id', function(req, res, next) {
   part.findOne({'_id' : req.params.id},  function (err, parts) {
     if (err) return next(err);
-    res.json(parts);
+    if(parts['sub_parts'][0] && parts['sub_parts'][0]['location']['store_id']) {
+      store.findOne({'_id' : parts['sub_parts'][0]['location']['store_id']},  function (err, stores) {
+        if (err) return next(err);
+        var ret = parts.toObject();
+        ret['store'] = stores;
+        ret['place_id'] = parts['sub_parts'][0]['location']['place_id']
+        console.log(ret);
+        res.json(ret);
+      });
+    } else {
+      res.json(parts);
+    }
   });
 });
 
@@ -51,14 +72,29 @@ router.get('/:id', function(req, res, next) {
 router.get('/device/:id', function(req, res, next) {
   part.findOne({'_id' : req.params.id},  function (err, parts) {
     if (err) return next(err);
-    if(parts['device_id'] != undefined) {
-      var topic = pubsub.topic('projects/partfinder-158723/topics/devices');
-      topic.publish({
-        device_id : parts['device_id'],
-        device_status: true,
-        clear_others : true
-      }, function(err) {});
-    }
+      if(parts['sub_parts'][0] && parts['sub_parts'][0]['location']['store_id']) {
+        store.findOne({'_id' : parts['sub_parts'][0]['location']['store_id']},  function (err, stores) {
+          if (err) return next(err);
+          var ret = parts.toObject();
+          ret['store'] = stores;
+          ret['place_id'] = parts['sub_parts'][0]['location']['place_id']
+            if(ret['place_id'] != undefined) {
+              console.log("Pubi")
+              var topic = pubsubClient.topic(process.env.GCP_PROJECT_ID+ stores['stid']);
+              topic.publish({
+                device_id : ret['place_id'],
+                device_status: true,
+                clear_others : true
+              }, function(err) {
+                console.log(err)
+              });
+           }
+          res.json(ret);
+        });
+      } else {
+        res.json(parts);
+      }
+
     res.json(parts);
   });
 });

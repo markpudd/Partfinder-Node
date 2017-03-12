@@ -41,6 +41,8 @@ jspm_packages
 
 env.list
 
+pod.yaml
+deployment.yaml
 
 node_modules
 bower_components

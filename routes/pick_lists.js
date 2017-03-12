@@ -3,12 +3,7 @@ var router = express.Router();
 
 var mongoose = require('mongoose');
 var picklist = require('../models/PickList.js');
-//var pubsub = require('@google-cloud/pubsub');
 
-/*({
-  projectId: process.env.GCP_PROJECT_ID,
-  keyFilename: process.env.KEY_FILE
-});*/
 
 /* GET /pick_list listing. */
 router.get('/', function(req, res, next) {
